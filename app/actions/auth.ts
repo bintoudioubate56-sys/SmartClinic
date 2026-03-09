@@ -62,16 +62,22 @@ export async function registerPatientAction(formData: FormData) {
   return { success: true }
 }
 
-export async function createStaffUserAction(data: { email: string, role: string, first_name: string, last_name: string }) {
+export async function createStaffUserAction(data: {
+  email: string
+  role: string
+  first_name: string
+  last_name: string
+  clinique_id?: string
+}) {
   const supabase = createClient()
 
-  // Verify caller is admin or superadmin
+  // Vérifier que l'appelant est admin ou superadmin
   const { data: { user }, error: userError } = await supabase.auth.getUser()
   if (userError || !user) return { error: "Non authentifié" }
 
   const { data: callerData } = await supabase
     .from('users')
-    .select('role')
+    .select('role, clinique_id')
     .eq('id', user.id)
     .single()
 
@@ -81,35 +87,47 @@ export async function createStaffUserAction(data: { email: string, role: string,
 
   const supabaseAdmin = createAdminClient()
 
-  // Generate random password or let admin set it. Here we generate one and send email implicitly
-  const password = Math.random().toString(36).slice(-10) + "A1!"
-
-  const { data: newAuthUser, error: newAuthError } = await supabaseAdmin.auth.admin.createUser({
+  // Générer un lien d'invitation magique → l'utilisateur reçoit un email
+  // et choisit son propre mot de passe lors du premier accès
+  const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+    type: 'invite',
     email: data.email,
-    password: password,
-    email_confirm: true,
-    user_metadata: { role: data.role, first_name: data.first_name, last_name: data.last_name }
+    options: {
+      data: {
+        role: data.role,
+        first_name: data.first_name,
+        last_name: data.last_name,
+      },
+    },
   })
 
-  if (newAuthError) {
-    return { error: newAuthError.message }
+  if (linkError) {
+    return { error: linkError.message }
   }
 
-  if (newAuthUser.user) {
+  if (linkData.user) {
+    // La clinique_id : admin rattache à sa clinique, superadmin peut spécifier
+    const clinique_id = callerData.role === 'superadmin'
+      ? (data.clinique_id ?? null)
+      : callerData.clinique_id
+
     const { error: dbError } = await supabaseAdmin.from('users').insert({
-      id: newAuthUser.user.id,
+      id: linkData.user.id,
       email: data.email,
-      first_name: data.first_name,
-      last_name: data.last_name,
-      role: data.role
+      nom: `${data.first_name} ${data.last_name}`,
+      role: data.role,
+      clinique_id,
     })
 
     if (dbError) {
-      // Rollback auth user creation if needed...
-      await supabaseAdmin.auth.admin.deleteUser(newAuthUser.user.id)
-      return { error: "Erreur base de données lors de la création du staff" }
+      // Rollback : supprimer l'utilisateur Auth créé
+      await supabaseAdmin.auth.admin.deleteUser(linkData.user.id)
+      return { error: "Erreur base de données lors de la création du compte staff" }
     }
   }
 
-  return { success: true, message: "Utilisateur créé avec succès" }
+  return {
+    success: true,
+    message: `Invitation envoyée à ${data.email}. L'utilisateur recevra un email pour définir son mot de passe.`,
+  }
 }
