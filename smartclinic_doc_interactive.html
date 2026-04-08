@@ -1,0 +1,564 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); }
+  .doc-root { padding: 1rem 0; }
+  .nav-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.5rem; border-bottom: 0.5px solid var(--color-border-tertiary); padding-bottom: 12px; }
+  .tab-btn { font-size: 13px; font-weight: 400; padding: 6px 14px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: transparent; cursor: pointer; color: var(--color-text-secondary); transition: all 0.15s; }
+  .tab-btn:hover { background: var(--color-background-secondary); color: var(--color-text-primary); }
+  .tab-btn.active { background: var(--color-background-secondary); color: var(--color-text-primary); border-color: var(--color-border-primary); font-weight: 500; }
+  .section { display: none; }
+  .section.visible { display: block; }
+  .spec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
+  .spec-card { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px 14px; border: 0.5px solid var(--color-border-tertiary); }
+  .spec-card .num { font-size: 11px; color: var(--color-text-tertiary); font-weight: 500; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .spec-card .title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+  .spec-card .desc { font-size: 12px; color: var(--color-text-secondary); margin-top: 3px; line-height: 1.4; }
+  .spec-card.highlight { border-color: var(--color-border-info); }
+  .block { margin-bottom: 1.25rem; }
+  .block-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 8px; padding-bottom: 6px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .code-block { background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 10px 12px; font-family: var(--font-mono); font-size: 12px; color: var(--color-text-primary); line-height: 1.6; overflow-x: auto; white-space: pre; }
+  .comment { color: var(--color-text-tertiary); }
+  .kw { color: var(--color-text-info); }
+  .str { color: var(--color-text-success); }
+  .fn { color: var(--color-text-warning); }
+  .rows { display: flex; flex-direction: column; gap: 6px; }
+  .row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border-radius: var(--border-radius-md); background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); }
+  .row-icon { font-size: 14px; width: 20px; flex-shrink: 0; }
+  .row-content { flex: 1; }
+  .row-label { font-size: 12px; font-weight: 500; color: var(--color-text-primary); }
+  .row-desc { font-size: 12px; color: var(--color-text-secondary); line-height: 1.4; margin-top: 2px; }
+  .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+  .badge-critique { background: var(--color-background-danger); color: var(--color-text-danger); }
+  .badge-haute { background: var(--color-background-warning); color: var(--color-text-warning); }
+  .badge-info { background: var(--color-background-info); color: var(--color-text-info); }
+  .badge-success { background: var(--color-background-success); color: var(--color-text-success); }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th { text-align: left; font-weight: 500; font-size: 11px; color: var(--color-text-secondary); padding: 6px 10px; border-bottom: 0.5px solid var(--color-border-tertiary); text-transform: uppercase; letter-spacing: 0.04em; }
+  td { padding: 7px 10px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); vertical-align: top; line-height: 1.4; }
+  tr:last-child td { border-bottom: none; }
+  .mono { font-family: var(--font-mono); font-size: 11.5px; }
+  .flow { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin: 8px 0; }
+  .flow-step { font-size: 12px; padding: 4px 10px; border-radius: 20px; background: var(--color-background-secondary); border: 0.5px solid var(--color-border-secondary); color: var(--color-text-primary); white-space: nowrap; }
+  .flow-arrow { color: var(--color-text-tertiary); font-size: 12px; }
+  .tip { font-size: 12px; color: var(--color-text-secondary); background: var(--color-background-info); border: 0.5px solid var(--color-border-info); border-radius: var(--border-radius-md); padding: 8px 12px; margin: 8px 0; line-height: 1.5; }
+  .warn { font-size: 12px; color: var(--color-text-warning); background: var(--color-background-warning); border: 0.5px solid var(--color-border-warning); border-radius: var(--border-radius-md); padding: 8px 12px; margin: 8px 0; line-height: 1.5; }
+  .section-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-text-tertiary); font-weight: 500; margin-bottom: 8px; }
+  h3 { font-size: 15px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 10px; }
+  p { font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; margin-bottom: 8px; }
+  .inline-code { font-family: var(--font-mono); font-size: 11.5px; background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: 4px; padding: 1px 5px; color: var(--color-text-primary); }
+  .role-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-bottom: 1rem; }
+  .role-card { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 10px 12px; background: var(--color-background-primary); }
+  .role-name { font-size: 12px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 3px; }
+  .role-desc { font-size: 11px; color: var(--color-text-secondary); line-height: 1.4; }
+  .role-route { font-family: var(--font-mono); font-size: 10.5px; color: var(--color-text-tertiary); margin-top: 4px; }
+</style>
+
+<div class="doc-root">
+  <h2 class="sr-only">Documentation interactive SmartClinic — architecture, modules, patterns de code</h2>
+
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="show('overview')">Vue d'ensemble</button>
+    <button class="tab-btn" onclick="show('architecture')">Architecture</button>
+    <button class="tab-btn" onclick="show('database')">Base de données</button>
+    <button class="tab-btn" onclick="show('specs')">Specs (SPEC-00→08)</button>
+    <button class="tab-btn" onclick="show('patterns')">Patterns de code</button>
+    <button class="tab-btn" onclick="show('roles')">Rôles & Auth</button>
+    <button class="tab-btn" onclick="show('offline')">Hors-ligne</button>
+    <button class="tab-btn" onclick="show('conventions')">Conventions</button>
+  </div>
+
+  <div id="overview" class="section visible">
+    <div class="section-label">Projet</div>
+    <h3>SmartClinic — Plateforme de gestion clinique pour la Guinée</h3>
+    <p>Application web multi-rôles permettant aux cliniques privées guinéennes de gérer patients, rendez-vous et dossiers médicaux. Remplace les carnets papier par un système numérique sécurisé.</p>
+
+    <div class="block">
+      <div class="block-title">Stack technique</div>
+      <div class="rows">
+        <div class="row"><div class="row-icon">⚙</div><div class="row-content"><div class="row-label">Next.js 14 (App Router)</div><div class="row-desc">Framework fullstack. Gère les pages React ET la logique serveur via Server Actions. Pas de backend Express séparé.</div></div></div>
+        <div class="row"><div class="row-icon">🗄</div><div class="row-content"><div class="row-label">Supabase</div><div class="row-desc">PostgreSQL + Auth JWT + Storage fichiers + Edge Functions. Le "backend managé" — pas de serveur à configurer.</div></div></div>
+        <div class="row"><div class="row-icon">🎨</div><div class="row-content"><div class="row-label">Tailwind CSS</div><div class="row-desc">Styles via classes directement dans le JSX. Aucun fichier CSS séparé créé.</div></div></div>
+        <div class="row"><div class="row-icon">📱</div><div class="row-content"><div class="row-label">Dexie.js (IndexedDB)</div><div class="row-desc">Base de données locale dans le navigateur. Permet le mode hors-ligne quand internet coupe.</div></div></div>
+        <div class="row"><div class="row-icon">💬</div><div class="row-content"><div class="row-label">AfricasTalking</div><div class="row-desc">API SMS pour notifications rendez-vous aux patients (+224XXXXXXXXX).</div></div></div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Périmètre MVP — ce qui est dans le scope</div>
+      <div class="rows">
+        <div class="row"><div class="row-icon">✓</div><div class="row-content"><div class="row-label">Auth multi-rôles</div><div class="row-desc">5 rôles distincts avec espaces isolés</div></div><span class="badge badge-critique">critique</span></div>
+        <div class="row"><div class="row-icon">✓</div><div class="row-content"><div class="row-label">Dossiers patients</div><div class="row-desc">CRUD complet + QR code + numéro unique SC-YYYY-XXXXX</div></div><span class="badge badge-critique">critique</span></div>
+        <div class="row"><div class="row-icon">✓</div><div class="row-content"><div class="row-label">Rendez-vous</div><div class="row-desc">Planning, SMS confirmation/rappel, gestion conflits créneaux</div></div><span class="badge badge-haute">haute</span></div>
+        <div class="row"><div class="row-icon">✓</div><div class="row-content"><div class="row-label">Dossiers médicaux</div><div class="row-desc">Consultations, ordonnances, upload PDF/JPG/PNG max 10MB</div></div><span class="badge badge-critique">critique</span></div>
+        <div class="row"><div class="row-icon">✓</div><div class="row-content"><div class="row-label">Accès urgence QR</div><div class="row-desc">Page publique — données vitales uniquement, sans login</div></div><span class="badge badge-critique">critique</span></div>
+        <div class="row"><div class="row-icon">✓</div><div class="row-content"><div class="row-label">Mode hors-ligne</div><div class="row-desc">Saisie locale + sync auto au retour en ligne</div></div><span class="badge badge-haute">haute</span></div>
+        <div class="row"><div class="row-icon">✓</div><div class="row-content"><div class="row-label">Audit log complet</div><div class="row-desc">Toutes les actions tracées dans audit_logs</div></div><span class="badge badge-info">info</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="architecture" class="section">
+    <div class="section-label">Structure</div>
+    <h3>Arborescence du projet</h3>
+    <div class="code-block"><span class="comment">smartclinic/</span>
+├── <span class="kw">app/</span>                        <span class="comment">← Pages Next.js (App Router)</span>
+│   ├── (auth)/               <span class="comment">← Route group PUBLIC</span>
+│   │   ├── login/page.tsx
+│   │   └── register/page.tsx
+│   ├── dashboard/            <span class="comment">← Protégé par middleware.ts</span>
+│   │   ├── admin/            <span class="comment">← Espace Admin</span>
+│   │   ├── doctor/           <span class="comment">← Espace Médecin</span>
+│   │   ├── reception/        <span class="comment">← Espace Réceptionniste</span>
+│   │   └── patient/          <span class="comment">← Espace Patient</span>
+│   └── emergency/[qrToken]/  <span class="comment">← PUBLIC, sans auth</span>
+│
+├── <span class="kw">actions/</span>                    <span class="comment">← Server Actions (logique métier)</span>
+│   ├── auth.ts
+│   ├── patients.ts
+│   ├── appointments.ts
+│   └── medical-records.ts
+│
+├── <span class="kw">components/</span>                 <span class="comment">← Composants React réutilisables</span>
+│   ├── ui/                   <span class="comment">← Boutons, inputs, modals</span>
+│   ├── patients/             <span class="comment">← PatientForm, PatientSearch...</span>
+│   ├── appointments/         <span class="comment">← AppointmentForm...</span>
+│   └── layout/               <span class="comment">← Header, Sidebar, OnlineIndicator</span>
+│
+├── <span class="kw">lib/</span>                        <span class="comment">← Utilitaires partagés</span>
+│   ├── supabase/client.ts    <span class="comment">← Client navigateur</span>
+│   ├── supabase/server.ts    <span class="comment">← Client serveur (cookies)</span>
+│   ├── offline/db.ts         <span class="comment">← Schema Dexie.js</span>
+│   ├── offline/sync.ts       <span class="comment">← Logique synchronisation</span>
+│   ├── sms.ts                <span class="comment">← AfricasTalking helper</span>
+│   └── audit.ts              <span class="comment">← logAction() helper</span>
+│
+├── <span class="kw">middleware.ts</span>               <span class="comment">← Vérification JWT + redirection rôle</span>
+├── <span class="kw">types/database.types.ts</span>     <span class="comment">← Types générés par Supabase CLI</span>
+└── <span class="kw">supabase/</span>
+    ├── migrations/           <span class="comment">← SQL versionné (001, 002...)</span>
+    ├── functions/            <span class="comment">← Edge Functions Deno</span>
+    └── seed.sql              <span class="comment">← Données de démo</span></div>
+
+    <div class="block" style="margin-top: 1.25rem;">
+      <div class="block-title">Flux d'une requête — du clic au retour</div>
+      <div class="flow">
+        <span class="flow-step">Clic utilisateur</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">Composant React</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">Server Action (actions/)</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">Supabase client serveur</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">PostgreSQL + RLS</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">ActionResult&lt;T&gt;</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">Re-render UI</span>
+      </div>
+      <div class="tip">Le middleware intercepte chaque requête AVANT qu'elle atteigne la page. Si pas de session JWT valide → redirect /login. Si mauvais rôle → redirect vers l'espace autorisé.</div>
+    </div>
+
+    <div class="block">
+      <div class="block-title">middleware.ts — logique de sécurité</div>
+      <p>C'est la première ligne de défense. Il s'exécute sur le serveur Edge à chaque requête vers <span class="inline-code">/dashboard/*</span>.</p>
+      <div class="code-block"><span class="comment">// middleware.ts (simplifié)</span>
+<span class="kw">export async function</span> <span class="fn">middleware</span>(req: NextRequest) {
+  <span class="comment">// 1. Récupère la session JWT Supabase</span>
+  <span class="kw">const</span> { data: { session } } = <span class="kw">await</span> supabase.auth.<span class="fn">getSession</span>()
+
+  <span class="comment">// 2. Pas de session → login</span>
+  <span class="kw">if</span> (!session && path.<span class="fn">startsWith</span>(<span class="str">'/dashboard'</span>)) {
+    <span class="kw">return</span> NextResponse.<span class="fn">redirect</span>(<span class="str">'/login'</span>)
+  }
+
+  <span class="comment">// 3. Mauvais espace pour ce rôle → redirect</span>
+  <span class="kw">const</span> role = session?.user?.user_metadata?.role
+  <span class="kw">const</span> allowed = roleRoutes[role]
+  <span class="kw">if</span> (allowed && !path.<span class="fn">startsWith</span>(allowed)) {
+    <span class="kw">return</span> NextResponse.<span class="fn">redirect</span>(allowed)
+  }
+}</div>
+    </div>
+  </div>
+
+  <div id="database" class="section">
+    <div class="section-label">Supabase PostgreSQL</div>
+    <h3>8 tables — relations et rôles</h3>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Table</th><th>Rôle</th><th>Clés importantes</th><th>RLS</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">clinics</td><td>Données de la clinique</td><td><span class="mono">id, name, phone</span></td><td><span class="badge badge-info">lecture staff</span></td></tr>
+          <tr><td class="mono">clinic_staff</td><td>Personnel + rôle</td><td><span class="mono">user_id, clinic_id, role</span></td><td><span class="badge badge-info">même clinic</span></td></tr>
+          <tr><td class="mono">patients</td><td>Dossiers patients</td><td><span class="mono">patient_number, qr_token, clinic_id</span></td><td><span class="badge badge-critique">multi-policy</span></td></tr>
+          <tr><td class="mono">appointments</td><td>Rendez-vous</td><td><span class="mono">patient_id, doctor_id, scheduled_at</span></td><td><span class="badge badge-info">staff clinic</span></td></tr>
+          <tr><td class="mono">medical_records</td><td>Consultations</td><td><span class="mono">patient_id, doctor_id, diagnosis</span></td><td><span class="badge badge-critique">doctor only</span></td></tr>
+          <tr><td class="mono">record_attachments</td><td>Fichiers PDF/images</td><td><span class="mono">record_id, file_url</span></td><td><span class="badge badge-info">staff clinic</span></td></tr>
+          <tr><td class="mono">audit_logs</td><td>Journal d'audit</td><td><span class="mono">user_id, action, target_id, ip</span></td><td><span class="badge badge-haute">insert all / select admin</span></td></tr>
+          <tr><td class="mono">emergency_access</td><td>Token QR urgence</td><td><span class="mono">qr_token (public), patient_id</span></td><td><span class="badge badge-success">accès public</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="block" style="margin-top: 1.25rem;">
+      <div class="block-title">ENUMs PostgreSQL créés</div>
+      <div class="rows">
+        <div class="row"><div class="row-content"><div class="row-label mono">staff_role</div><div class="row-desc">'admin' | 'doctor' | 'receptionist'</div></div></div>
+        <div class="row"><div class="row-content"><div class="row-label mono">blood_group</div><div class="row-desc">'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-' | 'INCONNU'</div></div></div>
+        <div class="row"><div class="row-content"><div class="row-label mono">appt_status</div><div class="row-desc">'scheduled' | 'confirmed' | 'cancelled' | 'completed' | 'no_show'</div></div></div>
+        <div class="row"><div class="row-content"><div class="row-label mono">audit_action</div><div class="row-desc">patient_created | patient_viewed | record_created | emergency_access | login | logout | ...</div></div></div>
+        <div class="row"><div class="row-content"><div class="row-label mono">language_type</div><div class="row-desc">'Français' | 'Soussou' | 'Pular' | 'Malinké' | 'Autre'</div></div></div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Row Level Security (RLS) — comment ça marche</div>
+      <p>La RLS est appliquée automatiquement par PostgreSQL à chaque requête, selon l'utilisateur connecté. Même si quelqu'un accède directement à l'URL, la DB refuse les données non autorisées.</p>
+      <div class="code-block"><span class="comment">-- Exemple : un médecin ne voit que les patients de SA clinique</span>
+<span class="kw">CREATE POLICY</span> <span class="str">"doctors_see_own_clinic_patients"</span>
+  <span class="kw">ON</span> patients <span class="kw">FOR SELECT TO</span> authenticated
+  <span class="kw">USING</span> (
+    <span class="fn">auth.uid</span>() <span class="kw">IN</span> (
+      <span class="kw">SELECT</span> user_id <span class="kw">FROM</span> clinic_staff
+      <span class="kw">WHERE</span> clinic_id = patients.clinic_id <span class="kw">AND</span> role = <span class="str">'doctor'</span>
+    )
+  );</div>
+      <div class="warn">Toujours tester la RLS avec un compte d'un autre rôle — une requête qui retourne null au lieu de données = RLS qui bloque correctement.</div>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Triggers automatiques</div>
+      <div class="rows">
+        <div class="row"><div class="row-icon">⚡</div><div class="row-content"><div class="row-label">generate_patient_number</div><div class="row-desc">Avant INSERT sur patients → génère <span class="inline-code">SC-2025-00001</span> via sequence PostgreSQL. Tu n'as pas à le gérer dans le code.</div></div></div>
+        <div class="row"><div class="row-icon">⚡</div><div class="row-content"><div class="row-label">generate_qr_token</div><div class="row-desc">Avant INSERT → génère un token hex 64 chars via <span class="inline-code">gen_random_bytes(32)</span>. Unique et imprévisible.</div></div></div>
+        <div class="row"><div class="row-icon">⚡</div><div class="row-content"><div class="row-label">updated_at trigger</div><div class="row-desc">Sur clinics, patients, appointments → met à jour <span class="inline-code">updated_at</span> automatiquement à chaque UPDATE.</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="specs" class="section">
+    <div class="section-label">Plan d'exécution</div>
+    <h3>9 specs — dans cet ordre exact</h3>
+    <div class="spec-grid">
+      <div class="spec-card highlight"><div class="num">SPEC-00</div><div class="title">Setup</div><div class="desc">Init projet, structure dossiers, middleware, clients Supabase, dépendances</div></div>
+      <div class="spec-card"><div class="num">SPEC-01</div><div class="title">Base de données</div><div class="desc">Migrations SQL via MCP : tables, ENUMs, RLS, triggers</div></div>
+      <div class="spec-card"><div class="num">SPEC-02</div><div class="title">Auth</div><div class="desc">signIn/signOut/signUp/resetPassword + page login + gestion users admin</div></div>
+      <div class="spec-card"><div class="num">SPEC-03</div><div class="title">Patients</div><div class="desc">CRUD patients, formulaire 3 étapes, recherche temps réel, dossier médecin</div></div>
+      <div class="spec-card"><div class="num">SPEC-04</div><div class="title">Rendez-vous</div><div class="desc">Planning, création RDV, conflit créneaux, SMS AfricasTalking</div></div>
+      <div class="spec-card"><div class="num">SPEC-05</div><div class="title">Médical</div><div class="desc">Consultations, upload fichiers, historique, règle 24h lecture seule</div></div>
+      <div class="spec-card"><div class="num">SPEC-06</div><div class="title">QR Code</div><div class="desc">Accès urgence public, génération carte PVC PDF, Edge Function</div></div>
+      <div class="spec-card"><div class="num">SPEC-07</div><div class="title">Hors-ligne</div><div class="desc">Dexie.js IndexedDB, sync auto, détection conflits, indicateur UI</div></div>
+      <div class="spec-card"><div class="num">SPEC-08</div><div class="title">Finalisation</div><div class="desc">Audit helper, seed données, tests sécurité, Edge Function cron SMS</div></div>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Règle d'or entre specs</div>
+      <div class="tip">Après chaque spec : <span class="inline-code">tsc --noEmit</span> doit passer sans erreur TypeScript avant de passer à la suivante. Une spec cassée = la suivante ne compilera pas.</div>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Semaines correspondantes (planning 12 semaines)</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Semaines</th><th>Specs</th><th>Phase</th></tr></thead>
+          <tbody>
+            <tr><td>1-2</td><td><span class="mono">SPEC-00, SPEC-01</span></td><td>Setup + DB</td></tr>
+            <tr><td>3-4</td><td><span class="mono">SPEC-02, SPEC-03</span></td><td>Auth + Patients</td></tr>
+            <tr><td>5-6</td><td><span class="mono">SPEC-04</span></td><td>Rendez-vous + SMS</td></tr>
+            <tr><td>7-8</td><td><span class="mono">SPEC-05</span></td><td>Dossiers médicaux</td></tr>
+            <tr><td>9</td><td><span class="mono">SPEC-06</span></td><td>QR Code + PDF</td></tr>
+            <tr><td>10</td><td><span class="mono">SPEC-07</span></td><td>Hors-ligne</td></tr>
+            <tr><td>11-12</td><td><span class="mono">SPEC-08</span></td><td>Tests + Livraison</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="patterns" class="section">
+    <div class="section-label">Patterns obligatoires</div>
+    <h3>Code à connaître par cœur</h3>
+
+    <div class="block">
+      <div class="block-title">ActionResult&lt;T&gt; — pattern de retour universel</div>
+      <p>Toutes les Server Actions retournent ce type. Jamais de throw nu côté client.</p>
+      <div class="code-block"><span class="comment">// types — à définir une fois, utiliser partout</span>
+<span class="kw">type</span> ActionResult&lt;T&gt; =
+  | { success: <span class="kw">true</span>; data: T }
+  | { success: <span class="kw">false</span>; error: <span class="kw">string</span> }
+
+<span class="comment">// Dans une Server Action</span>
+<span class="kw">export async function</span> <span class="fn">createPatient</span>(
+  formData: FormData
+): <span class="kw">Promise</span>&lt;ActionResult&lt;Patient&gt;&gt; {
+  <span class="kw">try</span> {
+    <span class="comment">// ... logique métier</span>
+    <span class="kw">return</span> { success: <span class="kw">true</span>, data: patient }
+  } <span class="kw">catch</span> (err) {
+    console.<span class="fn">error</span>(<span class="str">'[createPatient]'</span>, err)
+    <span class="kw">return</span> { success: <span class="kw">false</span>, error: <span class="str">'Erreur lors de la création du patient'</span> }
+  }
+}
+
+<span class="comment">// Dans le composant React</span>
+<span class="kw">const</span> result = <span class="kw">await</span> <span class="fn">createPatient</span>(formData)
+<span class="kw">if</span> (!result.success) {
+  <span class="fn">setError</span>(result.error) <span class="comment">// Afficher en français à l'utilisateur</span>
+  <span class="kw">return</span>
+}
+<span class="comment">// result.data est typé ici, pas de any</span></div>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Server Action sécurisée — vérification de rôle</div>
+      <p>Chaque action vérifie l'auth ET le rôle. La RLS est une 2e couche, pas la première.</p>
+      <div class="code-block"><span class="str">"use server"</span> <span class="comment">// ← OBLIGATOIRE en première ligne</span>
+
+<span class="kw">export async function</span> <span class="fn">createRecord</span>(data: RecordInput) {
+  <span class="kw">const</span> supabase = <span class="fn">createServerActionClient</span>({ cookies })
+  
+  <span class="comment">// 1. Vérifie la session</span>
+  <span class="kw">const</span> { data: { session } } = <span class="kw">await</span> supabase.auth.<span class="fn">getSession</span>()
+  <span class="kw">if</span> (!session) <span class="kw">return</span> { success: <span class="kw">false</span>, error: <span class="str">'Non autorisé'</span> }
+
+  <span class="comment">// 2. Vérifie le rôle</span>
+  <span class="kw">const</span> role = session.user.user_metadata.role
+  <span class="kw">if</span> (role !== <span class="str">'doctor'</span>) <span class="kw">return</span> { success: <span class="kw">false</span>, error: <span class="str">'Permission refusée'</span> }
+
+  <span class="comment">// 3. Logique métier + RLS fait le reste</span>
+  <span class="kw">const</span> { data: record, error } = <span class="kw">await</span> supabase
+    .<span class="fn">from</span>(<span class="str">'medical_records'</span>)
+    .<span class="fn">insert</span>(data)
+    .<span class="fn">select</span>()
+    .<span class="fn">single</span>()
+
+  <span class="comment">// 4. Log audit</span>
+  <span class="kw">await</span> <span class="fn">logAction</span>(supabase, { action: <span class="str">'record_created'</span>, ... })
+
+  <span class="kw">return</span> { success: <span class="kw">true</span>, data: record }
+}</div>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Types TypeScript — pas de any, jamais</div>
+      <div class="code-block"><span class="comment">// ❌ INTERDIT</span>
+<span class="kw">const</span> data: <span class="kw">any</span> = <span class="kw">await</span> supabase.<span class="fn">from</span>(<span class="str">'patients'</span>).<span class="fn">select</span>()
+
+<span class="comment">// ✅ OBLIGATOIRE</span>
+<span class="kw">import type</span> { Database } <span class="kw">from</span> <span class="str">'@/types/database.types'</span>
+<span class="kw">type</span> Patient = Database[<span class="str">'public'</span>][<span class="str">'Tables'</span>][<span class="str">'patients'</span>][<span class="str">'Row'</span>]
+
+<span class="kw">const</span> { data } = <span class="kw">await</span> supabase
+  .<span class="fn">from</span>(<span class="str">'patients'</span>)
+  .<span class="fn">select</span>(<span class="str">'*'</span>)
+  .<span class="fn">returns</span>&lt;Patient[]&gt;()</div>
+    </div>
+
+    <div class="block">
+      <div class="block-title">logAction() — audit de chaque action</div>
+      <div class="code-block"><span class="comment">// lib/audit.ts</span>
+<span class="kw">export async function</span> <span class="fn">logAction</span>(supabase, {
+  userId, clinicId, action, targetTable, targetId, metadata, request
+}) {
+  <span class="kw">const</span> ip = request?.headers.<span class="fn">get</span>(<span class="str">'x-forwarded-for'</span>)
+  <span class="kw">await</span> supabase.<span class="fn">from</span>(<span class="str">'audit_logs'</span>).<span class="fn">insert</span>({
+    user_id: userId,
+    clinic_id: clinicId,
+    action,         <span class="comment">// 'patient_created' | 'login' | etc.</span>
+    target_table: targetTable,
+    target_id: targetId,
+    ip_address: ip,
+    metadata        <span class="comment">// JSON libre : champs modifiés, etc.</span>
+  })
+}</div>
+    </div>
+  </div>
+
+  <div id="roles" class="section">
+    <div class="section-label">Contrôle d'accès</div>
+    <h3>5 rôles — espaces et droits</h3>
+    <div class="role-grid">
+      <div class="role-card"><div class="role-name">Admin</div><div class="role-desc">Configure la clinique, crée les comptes, voit tout</div><div class="role-route">/dashboard/admin</div></div>
+      <div class="role-card"><div class="role-name">Médecin</div><div class="role-desc">Consulte dossiers, saisit diagnostics et ordonnances</div><div class="role-route">/dashboard/doctor</div></div>
+      <div class="role-card"><div class="role-name">Réceptionniste</div><div class="role-desc">Enregistre patients, gère les rendez-vous</div><div class="role-route">/dashboard/reception</div></div>
+      <div class="role-card"><div class="role-name">Patient</div><div class="role-desc">Prend RDV, consulte son propre profil</div><div class="role-route">/dashboard/patient</div></div>
+      <div class="role-card"><div class="role-name">Urgence</div><div class="role-desc">Scan QR → données vitales SANS login</div><div class="role-route">/emergency/[token]</div></div>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Matrice des permissions</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Action</th><th>Admin</th><th>Médecin</th><th>Récept.</th><th>Patient</th></tr></thead>
+          <tbody>
+            <tr><td>Créer patient</td><td>✓</td><td>—</td><td>✓</td><td>—</td></tr>
+            <tr><td>Voir dossier patient</td><td>✓</td><td>✓ (même clinique)</td><td>✓</td><td>✓ (soi-même)</td></tr>
+            <tr><td>Modifier patient</td><td>✓</td><td>—</td><td>✓</td><td>—</td></tr>
+            <tr><td>Créer consultation</td><td>—</td><td>✓</td><td>—</td><td>—</td></tr>
+            <tr><td>Créer RDV</td><td>✓</td><td>—</td><td>✓</td><td>✓</td></tr>
+            <tr><td>Annuler RDV</td><td>✓</td><td>—</td><td>✓</td><td>—</td></tr>
+            <tr><td>Uploader fichier</td><td>—</td><td>✓</td><td>—</td><td>—</td></tr>
+            <tr><td>Créer compte staff</td><td>✓</td><td>—</td><td>—</td><td>—</td></tr>
+            <tr><td>Voir audit_logs</td><td>✓</td><td>—</td><td>—</td><td>—</td></tr>
+            <tr><td>Accès urgence QR</td><td colspan="4" style="text-align:center; color: var(--color-text-secondary); font-style: italic;">Public — aucun login requis</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Où est stocké le rôle ?</div>
+      <p>Le rôle est stocké dans <span class="inline-code">user_metadata.role</span> de Supabase Auth (JWT). C'est ce que le middleware lit. La table <span class="inline-code">clinic_staff</span> stocke le rôle aussi pour la RLS PostgreSQL.</p>
+      <div class="warn">Un rôle dans le JWT n'est pas chiffré — ne jamais y stocker de données sensibles. C'est uniquement pour le routage.</div>
+    </div>
+  </div>
+
+  <div id="offline" class="section">
+    <div class="section-label">Résilience réseau</div>
+    <h3>Mode hors-ligne — architecture</h3>
+
+    <div class="block">
+      <div class="block-title">Flux de synchronisation</div>
+      <div class="flow">
+        <span class="flow-step">Action utilisateur</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">isOnline ?</span>
+        <span class="flow-arrow">→ oui →</span>
+        <span class="flow-step">Server Action Supabase</span>
+        <span class="flow-arrow">→ non →</span>
+        <span class="flow-step">Store IndexedDB (Dexie)</span>
+      </div>
+      <div class="flow" style="margin-top: 6px;">
+        <span class="flow-step">Retour en ligne</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">30s delay</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">syncToSupabase()</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">Marque synced=true</span>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Tables IndexedDB (Dexie.js)</div>
+      <div class="code-block"><span class="comment">// lib/offline/db.ts</span>
+<span class="kw">const</span> db = <span class="kw">new</span> <span class="fn">Dexie</span>(<span class="str">'smartclinic-offline'</span>)
+db.<span class="fn">version</span>(1).<span class="fn">stores</span>({
+  patients:         <span class="str">'id, synced, created_at'</span>,
+  medical_records:  <span class="str">'id, synced, created_at'</span>,
+  appointments:     <span class="str">'id, synced, created_at'</span>,
+  pending_actions:  <span class="str">'id, action_type, created_at'</span>
+  <span class="comment">// data (JSON) dans chaque record — pas indexé</span>
+})</div>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Actions autorisées vs bloquées hors-ligne</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Action</th><th>Hors-ligne</th><th>Raison</th></tr></thead>
+          <tbody>
+            <tr><td>Consulter patients chargés</td><td><span class="badge badge-success">OK</span></td><td>Cache IndexedDB</td></tr>
+            <tr><td>Créer consultation</td><td><span class="badge badge-success">OK</span></td><td>Stocké pending_actions</td></tr>
+            <tr><td>Noter un RDV</td><td><span class="badge badge-success">OK</span></td><td>Stocké pending_actions</td></tr>
+            <tr><td>Upload PDF</td><td><span class="badge badge-critique">bloqué</span></td><td>Nécessite Storage Supabase</td></tr>
+            <tr><td>Envoi SMS</td><td><span class="badge badge-critique">bloqué</span></td><td>API AfricasTalking</td></tr>
+            <tr><td>Recherche nouveaux patients</td><td><span class="badge badge-critique">bloqué</span></td><td>Non en cache local</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Gestion des conflits de sync</div>
+      <div class="code-block"><span class="comment">// Si même record modifié en ligne ET hors-ligne</span>
+<span class="kw">function</span> <span class="fn">detectConflict</span>(localRecord, remoteRecord) {
+  <span class="kw">return</span> localRecord.updated_at &lt; remoteRecord.updated_at
+  <span class="comment">// true = conflit détecté</span>
+}
+<span class="comment">// → Conserver les 2 versions</span>
+<span class="comment">// → Créer pending_action type='conflict_alert'</span>
+<span class="comment">// → Admin arbitre manuellement</span></div>
+    </div>
+  </div>
+
+  <div id="conventions" class="section">
+    <div class="section-label">Code style</div>
+    <h3>Conventions — à respecter strictement</h3>
+
+    <div class="block">
+      <div class="block-title">Nommage des fichiers et éléments</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Élément</th><th>Convention</th><th>Exemple</th></tr></thead>
+          <tbody>
+            <tr><td>Fichiers composants</td><td>PascalCase.tsx</td><td class="mono">PatientCard.tsx</td></tr>
+            <tr><td>Fichiers lib/utils</td><td>kebab-case.ts</td><td class="mono">phone-validation.ts</td></tr>
+            <tr><td>Server Actions</td><td>camelCase, verbe d'action</td><td class="mono">createPatient()</td></tr>
+            <tr><td>Variables</td><td>camelCase</td><td class="mono">patientId, clinicName</td></tr>
+            <tr><td>Constantes globales</td><td>SCREAMING_SNAKE</td><td class="mono">MAX_FILE_SIZE_MB</td></tr>
+            <tr><td>Types/Interfaces</td><td>PascalCase</td><td class="mono">PatientFormData</td></tr>
+            <tr><td>Tables Supabase</td><td>snake_case pluriel</td><td class="mono">medical_records</td></tr>
+            <tr><td>Commits</td><td>Conventional Commits</td><td class="mono">feat: ajouter création patient</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Git workflow</div>
+      <div class="code-block"><span class="comment"># Branches principales</span>
+main          <span class="comment">← production (jamais commit direct)</span>
+develop       <span class="comment">← intégration commune</span>
+
+<span class="comment"># Feature branches (une par fonctionnalité)</span>
+feature/auth-login
+feature/patient-creation
+feature/appointments
+
+<span class="comment"># Workflow quotidien</span>
+git checkout develop && git pull
+git checkout -b feature/ma-feature
+<span class="comment"># ... développement ...</span>
+git push origin feature/ma-feature
+<span class="comment"># Pull Request vers develop → review → merge</span></div>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Definition of Done — une feature est livrée quand</div>
+      <div class="rows">
+        <div class="row"><div class="row-icon">✓</div><div class="row-content"><div class="row-label">tsc --noEmit passe sans erreur</div></div></div>
+        <div class="row"><div class="row-icon">✓</div><div class="row-content"><div class="row-label">Tous les critères d'acceptation de la User Story sont satisfaits</div></div></div>
+        <div class="row"><div class="row-icon">✓</div><div class="row-content"><div class="row-label">Testé sur mobile 375px (Chrome DevTools)</div></div></div>
+        <div class="row"><div class="row-icon">✓</div><div class="row-content"><div class="row-label">RLS vérifiée avec un compte d'un autre rôle</div></div></div>
+        <div class="row"><div class="row-icon">✓</div><div class="row-content"><div class="row-label">Entrée dans audit_logs présente</div></div></div>
+        <div class="row"><div class="row-icon">✓</div><div class="row-content"><div class="row-label">Messages d'erreur en français clair</div></div></div>
+        <div class="row"><div class="row-icon">✓</div><div class="row-content"><div class="row-label">Cas limites testés (champ vide, double soumission, caractères spéciaux)</div></div></div>
+        <div class="row"><div class="row-icon">✓</div><div class="row-content"><div class="row-label">Pull Request approuvée par l'autre dev</div></div></div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Variables d'environnement requises</div>
+      <div class="code-block"><span class="comment"># .env.local</span>
+NEXT_PUBLIC_SUPABASE_URL=<span class="str">https://xxx.supabase.co</span>
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<span class="str">eyJ...</span>
+SUPABASE_SERVICE_ROLE_KEY=<span class="str">eyJ...</span>     <span class="comment">← jamais côté client</span>
+AFRICAS_TALKING_API_KEY=<span class="str">xxx</span>
+AFRICAS_TALKING_USERNAME=<span class="str">sandbox</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function show(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('visible'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('visible');
+  event.target.classList.add('active');
+}
+</script>

@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SmartClinic — L'excellence médicale en Guinée 🇬🇳
 
-## Getting Started
+SmartClinic est une plateforme de gestion clinique Next.js 14 conçue pour digitaliser et sécuriser le parcours de soin en Guinée. Elle allie **performance médicale**, **résilience technologique** (offline-first) et **traçabilité totale** (logs d'audit).
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🌟 Points Forts
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **📱 Offline-First & Sync** : Continuez les consultations même sans connexion Internet. Synchronisation automatique dès le retour du Wi-Fi ou de la 4G.
+- **🚨 Accès d'Urgence QR** : Un simple scan permet aux secours d'accéder aux données vitales (sang, allergies) sans authentification.
+- **🔐 Audit Centralisé** : Chaque accès à un dossier médical est tracé (IP, Utilisateur, Horodatage) pour une conformité clinique totale.
+- **📅 Rappels SMS** : Réduction des RDV manqués via des notifications automatisées Africa's Talking.
+- **🎨 Design "Medical Modernism"** : Une interface ultra-fluide (Tailwind v4, Framer Motion) optimisée pour la concentration des praticiens.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🛠️ Stack Technique
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Framework** : Next.js 14 (+ Server Actions)
+- **Base de données** : Supabase (PostgreSQL)
+- **Gestion Hors-ligne** : Dexie.js (IndexedDB)
+- **Authentification** : Supabase Auth (RBAC : Doctor, Admin, Reception, Patient)
 
-## Learn More
+## 🚀 Installation Rapide
 
-To learn more about Next.js, take a look at the following resources:
+1.  **Cloner le projet** :
+    ```bash
+    git clone https://github.com/votre-repo/smart-clinic.git
+    cd smart-clinic
+    ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2.  **Installer les dépendances** :
+    ```bash
+    npm install
+    ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3.  **Configurer les variables d'environnement** :
+    Créez un fichier `.env.local` en vous basant sur `.env.local.example`.
 
-## Deploy on Vercel
+4.  **Lancer le serveur** :
+    ```bash
+    npm run dev
+    ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📖 Documentation Détaillée
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Pour un plongeon profond dans l'architecture, les schémas de base de données et les flux de synchronisation, consultez le dossier technique :
+👉 **[TECHNICAL_SPECIFICATIONS.md](./TECHNICAL_SPECIFICATIONS.md)**
+
+---
+
+*SmartClinic — Révolutionner la santé, un patient à la fois.*
